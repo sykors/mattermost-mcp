@@ -33,6 +33,14 @@ import {
   handleGetUnreadDirectMessages,
   handleGetUnreadGroupMessages,
 } from './unread.js';
+import {
+  listConversationsTool,
+  searchMessagesTool,
+  sendDirectMessageTool,
+  handleListConversations,
+  handleSearchMessages,
+  handleSendDirectMessage,
+} from './conversations.js';
 
 // Export all tool definitions
 export const tools: Tool[] = [
@@ -40,6 +48,9 @@ export const tools: Tool[] = [
   getChannelHistoryTool,
   getUnreadDirectMessagesTool,
   getUnreadGroupMessagesTool,
+  listConversationsTool,
+  searchMessagesTool,
+  sendDirectMessageTool,
   postMessageTool,
   replyToThreadTool,
   addReactionTool,
@@ -58,6 +69,9 @@ export const toolHandlers: Record<string, Function> = {
   mattermost_get_channel_history: handleGetChannelHistory,
   mattermost_get_unread_direct_messages: handleGetUnreadDirectMessages,
   mattermost_get_unread_group_messages: handleGetUnreadGroupMessages,
+  mattermost_list_conversations: handleListConversations,
+  mattermost_search_messages: handleSearchMessages,
+  mattermost_send_direct_message: handleSendDirectMessage,
   mattermost_post_message: handlePostMessage,
   mattermost_reply_to_thread: handleReplyToThread,
   mattermost_add_reaction: handleAddReaction,

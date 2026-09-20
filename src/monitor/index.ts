@@ -195,7 +195,8 @@ export class TopicMonitor {
         
         try {
           // Create a direct message channel with the current user
-          const dmChannel = await this.client.createDirectMessageChannel(this.currentUserId);
+          const currentUser = await this.client.getUserProfile('me');
+          const dmChannel = await this.client.createDirectMessageChannel(currentUser.id, this.currentUserId);
           this.directMessageChannelId = dmChannel.id;
           console.error(`Created direct message channel: ${dmChannel.id}`);
           return;

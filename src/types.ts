@@ -11,6 +11,26 @@ export interface GetUnreadMessagesArgs {
   page?: number;
 }
 
+export interface ListConversationsArgs {
+  limit?: number;
+  page?: number;
+}
+
+export interface SearchMessagesArgs {
+  text?: string;
+  sender?: string;
+  channel?: string;
+  after?: string;
+  before?: string;
+  limit?: number;
+  page?: number;
+}
+
+export interface SendDirectMessageArgs {
+  username: string;
+  message: string;
+}
+
 export interface PostMessageArgs {
   channel_id: string;
   message: string;
@@ -59,6 +79,7 @@ export interface Channel {
   purpose: string;
   create_at: number;
   update_at: number;
+  last_post_at: number;
   delete_at: number;
   total_msg_count: number;
   creator_id: string;
@@ -123,6 +144,10 @@ export interface PostsResponse {
   order: string[];
   next_post_id: string;
   prev_post_id: string;
+}
+
+export interface SearchPostsResponse extends PostsResponse {
+  total_count?: number;
 }
 
 export interface ChannelsResponse {

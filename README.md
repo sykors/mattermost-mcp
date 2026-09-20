@@ -56,6 +56,9 @@ The server includes a topic monitoring system that can:
 - `mattermost_get_channel_history`: Get recent messages from a channel
 - `mattermost_get_unread_direct_messages`: Read unread direct messages from users
 - `mattermost_get_unread_group_messages`: Read unread messages from group conversations and public/private channels
+- `mattermost_list_conversations`: List direct and group conversations with unread counts
+- `mattermost_search_messages`: Search accessible messages by text, sender, channel, and date range
+- `mattermost_send_direct_message`: Send a message to a user by username
 
 ### Message Tools
 - `mattermost_post_message`: Post a new message to a channel
@@ -183,6 +186,12 @@ You can trigger the monitoring process manually in several ways:
 - Both use the account represented by `MATTERMOST_TOKEN`, exclude its own posts, and do not mark anything as read.
 - Optional inputs: `limit` (default 50, max 200) and `page` (starting from 0).
 - Results include the sender, channel, timestamp, `total_count`, and `has_more` for pagination.
+
+#### Conversation and search tools
+
+- `mattermost_list_conversations` lists direct (`D`) and group (`G`) conversations. Each entry includes participants, unread messages, mentions, and last post time. Use `limit` and `page` for pagination.
+- `mattermost_search_messages` accepts optional `text`, `sender` username, `channel` name or ID, `after`, and `before` filters. Dates use `YYYY-MM-DD`; at least one filter is required. Results are paginated with `limit` and `page`.
+- `mattermost_send_direct_message` requires `username` and `message`. It looks up the recipient, creates or reuses the direct conversation, and sends the post. It does not require a channel ID.
 
 ### Message Tools
 

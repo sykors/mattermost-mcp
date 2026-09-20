@@ -10,7 +10,8 @@ import {
   ChannelsResponse,
   ChannelUnread,
   ChannelMember,
-  UsersResponse
+  UsersResponse,
+  SearchPostsResponse
 } from './types.js';
 
 export class MattermostClient {
@@ -170,6 +171,18 @@ export class MattermostClient {
     return response.json() as Promise<PostsResponse>;
   }
 
+  async searchPosts(terms: string, limit: number = 50, page: number = 0): Promise<SearchPostsResponse> {
+    const response = await fetch(`${this.baseUrl}/posts/search`, {
+      method: 'POST',
+      headers: this.headers,
+      body: JSON.stringify({ terms, is_or_search: false, per_page: limit, page }),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to search posts: ${response.status} ${response.statusText}`);
+    }
+    return response.json() as Promise<SearchPostsResponse>;
+  }
+
   // Reaction-related methods
   async addReaction(postId: string, emojiName: string): Promise<Reaction> {
     const url = `${this.baseUrl}/reactions`;
@@ -216,11 +229,19 @@ export class MattermostClient {
     
     return response.json() as Promise<UserProfile>;
   }
+
+  async getUserByUsername(username: string): Promise<UserProfile> {
+    const response = await fetch(`${this.baseUrl}/users/username/${encodeURIComponent(username)}`, { headers: this.headers });
+    if (!response.ok) {
+      throw new Error(`User ${username} not found: ${response.status} ${response.statusText}`);
+    }
+    return response.json() as Promise<UserProfile>;
+  }
   
   // Direct message channel methods
-  async createDirectMessageChannel(userId: string): Promise<Channel> {
+  async createDirectMessageChannel(currentUserId: string, recipientId: string): Promise<Channel> {
     const url = `${this.baseUrl}/channels/direct`;
-    const body = [userId];
+    const body = [currentUserId, recipientId];
     
     const response = await fetch(url, {
       method: 'POST',
