@@ -1,6 +1,6 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { MattermostClient } from '../client.js';
-import { ListConversationsArgs, SearchMessagesArgs, SendDirectMessageArgs } from '../types.js';
+import { ListConversationsArgs, Post, SearchMessagesArgs, SendDirectMessageArgs } from '../types.js';
 
 export const listConversationsTool: Tool = {
   name: 'mattermost_list_conversations',
@@ -96,10 +96,10 @@ export async function handleListConversations(client: MattermostClient, args: Li
   }
 }
 
-function searchTerms(args: SearchMessagesArgs) {
+function searchTerms(args: SearchMessagesArgs, channelFilter?: string) {
   const parts: string[] = [];
   if (args.text?.trim()) parts.push(`"${args.text.trim().replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
-  for (const [key, value] of [['from', args.sender?.replace(/^@/, '')], ['in', args.channel]] as const) {
+  for (const [key, value] of [['from', args.sender?.replace(/^@/, '')], ['in', channelFilter]] as const) {
     if (!value?.trim()) continue;
     if (!/^[a-zA-Z0-9._-]+$/.test(value)) throw new Error(`Invalid ${key} filter`);
     parts.push(`${key}:${value}`);
@@ -116,14 +116,39 @@ function searchTerms(args: SearchMessagesArgs) {
 export async function handleSearchMessages(client: MattermostClient, args: SearchMessagesArgs) {
   try {
     const { limit, page } = pageArgs(args.limit, args.page);
-    const response = await client.searchPosts(searchTerms(args), limit, page);
-    const messages = response.order.map(id => {
-      const post = response.posts[id];
+    let channelFilter = args.channel?.trim();
+    if (channelFilter) {
+      channelFilter = channelFilter.replace(/^#/, '');
+      const channels = await client.getMemberChannels();
+      const matchingChannel = channels.find(channel =>
+        channel.id === channelFilter || channel.name.toLowerCase() === channelFilter!.toLowerCase() || channel.display_name?.toLowerCase() === channelFilter!.toLowerCase()
+      );
+      channelFilter = matchingChannel?.id ?? channelFilter;
+    }
+    const terms = searchTerms(args, channelFilter);
+    const offset = page * limit;
+    const serverPageSize = 100;
+    let serverPage = Math.floor(offset / serverPageSize);
+    let skip = offset % serverPageSize;
+    let totalCount: number | null = null;
+    const found: Post[] = [];
+    while (found.length <= limit) {
+      const response = await client.searchPosts(terms, serverPage);
+      const batch = response.order.map(id => response.posts[id]);
+      found.push(...batch.slice(skip));
+      if (batch.length < serverPageSize) {
+        totalCount = serverPage * serverPageSize + batch.length;
+        break;
+      }
+      serverPage++;
+      skip = 0;
+    }
+    const selected = found.slice(0, limit);
+    const messages = selected.map(post => {
       return { id: post.id, channel_id: post.channel_id, sender_id: post.user_id, message: post.message, create_at: new Date(post.create_at).toISOString(), root_id: post.root_id || null };
     });
-    const totalCount = response.total_count ?? messages.length;
     return {
-      content: [{ type: 'text' as const, text: JSON.stringify({ messages, total_count: totalCount, page, per_page: limit, has_more: (page + 1) * limit < totalCount }, null, 2) }],
+      content: [{ type: 'text' as const, text: JSON.stringify({ messages, total_count: totalCount, page, per_page: limit, has_more: found.length > limit || (totalCount !== null && offset + messages.length < totalCount) }, null, 2) }],
     };
   } catch (error) {
     return errorResult(error);

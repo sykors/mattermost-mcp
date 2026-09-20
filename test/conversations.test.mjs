@@ -59,6 +59,9 @@ test('lists direct and group conversations with unread counts and participants',
 
 test('searches messages with text, sender, channel and date filters', async () => {
   await withServer(({ method, path }) => {
+    if (method === 'GET' && path === '/api/v4/users/me/teams/team-1/channels') return { body: [
+      { id: 'channel-1', name: 'project-problems', display_name: 'Project Problems', type: 'P' },
+    ] };
     if (method === 'POST' && path === '/api/v4/posts/search') return { body: {
       order: ['post-1'], posts: { 'post-1': { id: 'post-1', channel_id: 'channel-1', user_id: 'alice-id', message: 'Urgent fix', create_at: 3000 } }, total_count: 1,
     } };
@@ -71,8 +74,24 @@ test('searches messages with text, sender, channel and date filters', async () =
     const data = JSON.parse(result.content[0].text);
     assert.deepEqual(data.messages.map(item => item.id), ['post-1']);
     assert.equal(data.total_count, 1);
-    assert.equal(requests[0].path, '/api/v4/posts/search');
-    assert.equal(requests[0].body.terms, '"urgent fix" from:alice in:project-problems after:2026-09-01 before:2026-09-20');
+    const search = requests.find(request => request.path === '/api/v4/posts/search');
+    assert.equal(search.body.terms, '"urgent fix" from:alice in:channel-1 after:2026-09-01 before:2026-09-20');
+  });
+});
+
+test('paginates search results even when the server ignores per_page', async () => {
+  await withServer(({ method, path }) => {
+    if (method === 'POST' && path === '/api/v4/posts/search') {
+      const posts = Array.from({ length: 25 }, (_, index) => ({ id: `post-${index}`, channel_id: 'channel-1', user_id: 'alice-id', message: 'test', create_at: 3000 - index }));
+      return { body: { order: posts.map(post => post.id), posts: Object.fromEntries(posts.map(post => [post.id, post])) } };
+    }
+    return { status: 404 };
+  }, async client => {
+    const result = await executeTool(client, 'mattermost_search_messages', { text: 'test', limit: 10, page: 1 });
+    assert.equal(result.isError, undefined);
+    const data = JSON.parse(result.content[0].text);
+    assert.deepEqual(data.messages.map(item => item.id), Array.from({ length: 10 }, (_, index) => `post-${index + 10}`));
+    assert.equal(data.has_more, true);
   });
 });
 

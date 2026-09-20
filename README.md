@@ -190,7 +190,7 @@ You can trigger the monitoring process manually in several ways:
 #### Conversation and search tools
 
 - `mattermost_list_conversations` lists direct (`D`) and group (`G`) conversations. Each entry includes participants, unread messages, mentions, and last post time. Use `limit` and `page` for pagination.
-- `mattermost_search_messages` accepts optional `text`, `sender` username, `channel` name or ID, `after`, and `before` filters. Dates use `YYYY-MM-DD`; at least one filter is required. Results are paginated with `limit` and `page`.
+- `mattermost_search_messages` accepts optional `text`, `sender` username, `channel` name or ID, `after`, and `before` filters. Dates use `YYYY-MM-DD`; at least one filter is required. Results are paginated with `limit` and `page`. `total_count` is `null` until the last search page is reached when the Mattermost server does not supply a reliable total.
 - `mattermost_send_direct_message` requires `username` and `message`. It looks up the recipient, creates or reuses the direct conversation, and sends the post. It does not require a channel ID.
 
 ### Message Tools

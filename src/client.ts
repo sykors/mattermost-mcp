@@ -171,11 +171,11 @@ export class MattermostClient {
     return response.json() as Promise<PostsResponse>;
   }
 
-  async searchPosts(terms: string, limit: number = 50, page: number = 0): Promise<SearchPostsResponse> {
+  async searchPosts(terms: string, page: number = 0): Promise<SearchPostsResponse> {
     const response = await fetch(`${this.baseUrl}/posts/search`, {
       method: 'POST',
       headers: this.headers,
-      body: JSON.stringify({ terms, is_or_search: false, per_page: limit, page }),
+      body: JSON.stringify({ terms, is_or_search: false, per_page: 100, page }),
     });
     if (!response.ok) {
       throw new Error(`Failed to search posts: ${response.status} ${response.statusText}`);
