@@ -33,7 +33,6 @@ export class MattermostClient {
     url.searchParams.append('per_page', limit.toString());
     
     console.error(`Fetching channels from URL: ${url.toString()}`);
-    console.error(`Using headers: ${JSON.stringify(this.headers)}`);
     
     try {
       const response = await fetch(url.toString(), { headers: this.headers });

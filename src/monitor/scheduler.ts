@@ -1,4 +1,4 @@
-import cron from 'node-cron';
+import cron, { type ScheduledTask } from 'node-cron';
 import { MonitoringConfig } from '../config.js';
 
 type TaskFunction = () => Promise<void>;
@@ -7,7 +7,7 @@ type TaskFunction = () => Promise<void>;
  * Scheduler class for managing cron jobs
  */
 export class Scheduler {
-  private task: cron.ScheduledTask | null = null;
+  private task: ScheduledTask | null = null;
   private config: MonitoringConfig;
   private taskFn: TaskFunction;
 

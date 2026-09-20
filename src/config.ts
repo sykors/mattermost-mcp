@@ -25,6 +25,17 @@ export interface Config {
 
 export function loadConfig(): Config {
   try {
+    if (process.env.MATTERMOST_URL || process.env.MATTERMOST_TOKEN || process.env.MATTERMOST_TEAM_ID) {
+      const config: Config = {
+        mattermostUrl: process.env.MATTERMOST_URL || '',
+        token: process.env.MATTERMOST_TOKEN || '',
+        teamId: process.env.MATTERMOST_TEAM_ID || '',
+        monitoring: { enabled: false, schedule: '', channels: [], topics: [], messageLimit: 50 },
+      };
+      validateConfig(config);
+      return config;
+    }
+
     // First try to load from config.local.json
     const localConfigPath = path.resolve(__dirname, '../config.local.json');
     

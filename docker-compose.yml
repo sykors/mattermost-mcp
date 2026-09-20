@@ -1,0 +1,23 @@
+services:
+  mattermost:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      MATTERMOST_URL: ${MATTERMOST_URL:?required}
+      MATTERMOST_TOKEN: ${MATTERMOST_TOKEN:?required}
+      MATTERMOST_TEAM_ID: ${MATTERMOST_TEAM_ID:?required}
+      MATTERMOST_DISABLE_MONITOR_HTTP: "true"
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.gateway
+    environment:
+      MCP_ACCESS_TOKEN: ${MCP_ACCESS_TOKEN:?required}
+    depends_on:
+      - mattermost
+    expose:
+      - "8080"
+    restart: unless-stopped

@@ -126,45 +126,6 @@ async function main() {
     }
   }
   
-  // Set up command-line interface
-  process.stdin.setEncoding('utf8');
-  console.error("Setting up command-line interface...");
-  
-  process.stdin.on('data', async (data) => {
-    console.error(`Received input: "${data.toString().trim()}"`);
-    const input = data.toString().trim().toLowerCase();
-    
-    if (input === 'run' || input === 'monitor' || input === 'check') {
-      console.error("Command received: Running monitoring process...");
-      if (topicMonitor) {
-        try {
-          console.error("Calling topicMonitor.runNow()...");
-          await topicMonitor.runNow();
-          console.error("Monitoring process completed successfully");
-        } catch (error) {
-          console.error("Error running monitoring process:", error);
-        }
-      } else {
-        console.error("Monitoring is not enabled or initialized");
-      }
-    } else if (input === 'help') {
-      console.error("Available commands:");
-      console.error("  run, monitor, check - Run the monitoring process immediately");
-      console.error("  help - Show this help message");
-      console.error("  exit - Shutdown the server");
-    } else if (input === 'exit' || input === 'quit') {
-      console.error("Shutting down server...");
-      process.exit(0);
-    } else {
-      console.error("Unknown command. Type 'help' for available commands");
-    }
-  });
-  
-  // Resume stdin to capture input
-  process.stdin.resume();
-  
-  console.error("Command interface ready. Type 'run' to trigger monitoring, 'help' for more commands");
-  
   // Set up HTTP server for remote triggering of monitoring
   const httpPort = 3456; // Choose a port that's likely to be available
   const httpServer = http.createServer(async (req, res) => {
@@ -228,11 +189,15 @@ async function main() {
   });
   
   // Start the HTTP server
-  httpServer.listen(httpPort, () => {
-    console.error(`HTTP server listening on port ${httpPort}`);
-    console.error(`To trigger monitoring, visit http://localhost:${httpPort}/run-monitoring`);
-    console.error(`To check status, visit http://localhost:${httpPort}/status`);
-  });
+  // A gateway can start a separate stdio process for each MCP session.
+  // Only one process may bind the auxiliary monitoring port.
+  if (process.env.MATTERMOST_DISABLE_MONITOR_HTTP !== 'true') {
+    httpServer.listen(httpPort, () => {
+      console.error(`HTTP server listening on port ${httpPort}`);
+      console.error(`To trigger monitoring, visit http://localhost:${httpPort}/run-monitoring`);
+      console.error(`To check status, visit http://localhost:${httpPort}/status`);
+    });
+  }
   
   // Handle process termination
   process.on('SIGINT', () => {

@@ -2,6 +2,43 @@
 
 MCP Server for the Mattermost API, enabling Claude and other MCP clients to interact with Mattermost workspaces.
 
+## Dokploy / remote Codex deployment
+
+This fork includes a Docker Compose deployment for a remote MCP client. The original
+server speaks MCP over stdio. Supergateway exposes it as Streamable HTTP, and a Caddy
+sidecar requires a separate bearer token before forwarding requests.
+
+Set these variables in the Dokploy Compose environment:
+
+| Variable | Value |
+| --- | --- |
+| `MATTERMOST_URL` | Mattermost API URL ending in `/api/v4` |
+| `MATTERMOST_TOKEN` | Personal access token for the intended Mattermost account |
+| `MATTERMOST_TEAM_ID` | Mattermost team ID |
+| `MCP_ACCESS_TOKEN` | A separate random token for MCP clients |
+
+Build and deploy `docker-compose.yml`. Route the `gateway` service on port `8080`
+through HTTPS. The MCP endpoint is `https://<your-domain>/mcp`; `/healthz` is a
+public health check. The MCP endpoint rejects missing or incorrect bearer tokens.
+The Mattermost service is only reachable on the Compose network.
+
+For Codex, add a Streamable HTTP server to `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.mattermost]
+url = "https://<your-domain>/mcp"
+bearer_token_env_var = "MATTERMOST_MCP_ACCESS_TOKEN"
+```
+
+Set `MATTERMOST_MCP_ACCESS_TOKEN` in the environment of the Codex host to the
+same value as `MCP_ACCESS_TOKEN` in Dokploy. Restart Codex after editing its MCP
+configuration. No Mattermost token is stored in the Codex configuration.
+
+The fixed-port auxiliary monitoring HTTP endpoint and topic monitoring are
+disabled in the Compose deployment because Supergateway may start multiple
+stdio processes. The remote deployment exposes the channel, message, and user
+tools; the monitoring tool is listed but reports that monitoring is disabled.
+
 ## Features
 
 This MCP server provides tools for interacting with Mattermost, including:
@@ -101,20 +138,11 @@ You can trigger the monitoring process manually in several ways:
    - `./analyze-channel.js <channel-name> [count]` - Analyze message statistics in a channel
    - `./get-last-message.js <channel-name>` - Get the last message from a channel
 
-2. **Using the command-line interface (CLI)**:
-   - While the server is running, simply type one of these commands in the terminal:
-     - `run` - Run the monitoring process
-     - `monitor` - Same as `run`
-     - `check` - Same as `run`
-   - Other available commands:
-     - `help` - Show available commands
-     - `exit` - Shutdown the server
-
-3. **Using the MCP tool**:
+2. **Using the MCP tool**:
    - Use the `mattermost_run_monitoring` tool through the MCP interface
    - This will immediately check all configured channels for your topics of interest
 
-4. **Using the command-line flags**:
+3. **Using the command-line flags**:
    - Start the server with the `--run-monitoring` flag:
    ```bash
    npm start -- --run-monitoring

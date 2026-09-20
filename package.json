@@ -10,6 +10,7 @@
   "scripts": {
     "build": "tsc",
     "postbuild": "chmod +x build/index.js",
+    "test": "npm run build && node --test test/*.test.mjs",
     "start": "node build/index.js",
     "dev": "tsc && node build/index.js"
   },
@@ -21,9 +22,10 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^0.7.0",
-    "node-cron": "^3.0.3",
-    "node-fetch": "^3.3.2"
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "node-cron": "^4.6.0",
+    "node-fetch": "^3.3.2",
+    "supergateway": "^3.4.3"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
