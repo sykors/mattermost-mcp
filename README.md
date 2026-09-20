@@ -52,7 +52,7 @@ The server includes a topic monitoring system that can:
 - Mention you in a specified channel when topics are found
 
 ### Channel Tools
-- `mattermost_list_channels`: List public channels in the workspace
+- `mattermost_list_channels`: List public channels in the configured team and private channels that the connected account has joined
 - `mattermost_get_channel_history`: Get recent messages from a channel
 
 ### Message Tools
@@ -159,11 +159,11 @@ You can trigger the monitoring process manually in several ways:
 ### Channel Tools
 
 #### `mattermost_list_channels`
-- List public channels in the workspace
+- List public channels in the configured team and private channels joined by the account represented by `MATTERMOST_TOKEN`. Private channels outside that account's membership are not visible through this endpoint.
 - Optional inputs:
   - `limit` (number, default: 100, max: 200): Maximum number of channels to return
   - `page` (number, default: 0): Page number for pagination
-- Returns: List of channels with their IDs and information
+- Returns: Alphabetically sorted, deduplicated list of channels with their IDs and information, plus the total count
 
 #### `mattermost_get_channel_history`
 - Get recent messages from a channel

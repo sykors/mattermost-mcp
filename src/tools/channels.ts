@@ -1,11 +1,11 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { MattermostClient } from "../client.js";
-import { ListChannelsArgs, GetChannelHistoryArgs } from "../types.js";
+import { Channel, ListChannelsArgs, GetChannelHistoryArgs } from "../types.js";
 
 // Tool definition for listing channels
 export const listChannelsTool: Tool = {
   name: "mattermost_list_channels",
-  description: "List public channels in the Mattermost workspace with pagination",
+  description: "List public channels and private channels joined by the connected Mattermost account, with pagination",
   inputSchema: {
     type: "object",
     properties: {
@@ -54,31 +54,31 @@ export async function handleListChannels(
   client: MattermostClient,
   args: ListChannelsArgs
 ) {
-  const limit = args.limit || 100;
-  const page = args.page || 0;
+  const limit = Math.min(200, Math.max(1, Math.trunc(args.limit ?? 100)));
+  const page = Math.max(0, Math.trunc(args.page ?? 0));
   
   try {
-    const response = await client.getChannels(limit, page);
-    
-    // Check if response.channels exists
-    if (!response || !response.channels) {
-      console.error("API response missing channels array:", response);
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({
-              error: "API response missing channels array",
-              raw_response: response
-            }, null, 2),
-          },
-        ],
-        isError: true,
-      };
+    const channelsById = new Map<string, Channel>();
+    const publicPageSize = 200;
+    for (let publicPage = 0; ; publicPage++) {
+      const response = await client.getChannels(publicPageSize, publicPage);
+      if (!Array.isArray(response?.channels)) {
+        throw new Error('Public channels response is missing a channels array');
+      }
+      for (const channel of response.channels) channelsById.set(channel.id, channel);
+      if (response.channels.length < publicPageSize) break;
     }
+
+    for (const channel of await client.getMemberChannels()) {
+      if (channel.type === 'O' || channel.type === 'P') channelsById.set(channel.id, channel);
+    }
+
+    const channels = [...channelsById.values()].sort((a, b) =>
+      (a.display_name || a.name).localeCompare(b.display_name || b.name) || a.id.localeCompare(b.id)
+    );
+    const selectedChannels = channels.slice(page * limit, (page + 1) * limit);
     
-    // Format the response for better readability
-    const formattedChannels = response.channels.map(channel => ({
+    const formattedChannels = selectedChannels.map(channel => ({
       id: channel.id,
       name: channel.name,
       display_name: channel.display_name,
@@ -94,7 +94,7 @@ export async function handleListChannels(
           type: "text",
           text: JSON.stringify({
             channels: formattedChannels,
-            total_count: response.total_count || 0,
+            total_count: channels.length,
             page: page,
             per_page: limit,
           }, null, 2),

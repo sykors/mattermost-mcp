@@ -67,6 +67,22 @@ export class MattermostClient {
     }
   }
 
+  async getMemberChannels(): Promise<Channel[]> {
+    const url = `${this.baseUrl}/users/me/teams/${this.teamId}/channels`;
+    const response = await fetch(url, { headers: this.headers });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get member channels: ${response.status} ${response.statusText}`);
+    }
+
+    const channels = await response.json();
+    if (!Array.isArray(channels)) {
+      throw new Error('Member channels response is not an array');
+    }
+
+    return channels as Channel[];
+  }
+
   async getChannel(channelId: string): Promise<Channel> {
     const url = `${this.baseUrl}/channels/${channelId}`;
     const response = await fetch(url, { headers: this.headers });
