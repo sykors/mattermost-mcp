@@ -6,6 +6,11 @@ export interface ListChannelsArgs {
   page?: number;
 }
 
+export interface GetUnreadMessagesArgs {
+  limit?: number;
+  page?: number;
+}
+
 export interface PostMessageArgs {
   channel_id: string;
   message: string;
@@ -123,6 +128,16 @@ export interface PostsResponse {
 export interface ChannelsResponse {
   channels: Channel[];
   total_count: number;
+}
+
+export interface ChannelUnread {
+  msg_count: number;
+  mention_count: number;
+}
+
+export interface ChannelMember {
+  channel_id: string;
+  last_viewed_at: number;
 }
 
 export interface UsersResponse {

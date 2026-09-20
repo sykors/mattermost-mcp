@@ -8,6 +8,8 @@ import {
   Reaction,
   PostsResponse,
   ChannelsResponse,
+  ChannelUnread,
+  ChannelMember,
   UsersResponse
 } from './types.js';
 
@@ -81,6 +83,22 @@ export class MattermostClient {
     }
 
     return channels as Channel[];
+  }
+
+  async getChannelUnread(channelId: string): Promise<ChannelUnread> {
+    const response = await fetch(`${this.baseUrl}/users/me/channels/${channelId}/unread`, { headers: this.headers });
+    if (!response.ok) {
+      throw new Error(`Failed to get channel unread count: ${response.status} ${response.statusText}`);
+    }
+    return response.json() as Promise<ChannelUnread>;
+  }
+
+  async getChannelMember(channelId: string): Promise<ChannelMember> {
+    const response = await fetch(`${this.baseUrl}/channels/${channelId}/members/me`, { headers: this.headers });
+    if (!response.ok) {
+      throw new Error(`Failed to get channel membership: ${response.status} ${response.statusText}`);
+    }
+    return response.json() as Promise<ChannelMember>;
   }
 
   async getChannel(channelId: string): Promise<Channel> {

@@ -54,6 +54,8 @@ The server includes a topic monitoring system that can:
 ### Channel Tools
 - `mattermost_list_channels`: List public channels in the configured team and private channels that the connected account has joined
 - `mattermost_get_channel_history`: Get recent messages from a channel
+- `mattermost_get_unread_direct_messages`: Read unread direct messages from users
+- `mattermost_get_unread_group_messages`: Read unread messages from group conversations and public/private channels
 
 ### Message Tools
 - `mattermost_post_message`: Post a new message to a channel
@@ -173,6 +175,14 @@ You can trigger the monitoring process manually in several ways:
   - `limit` (number, default: 30): Number of messages to retrieve
   - `page` (number, default: 0): Page number for pagination
 - Returns: List of messages with their content and metadata
+
+#### Unread message tools
+
+- `mattermost_get_unread_direct_messages` returns messages from one-to-one conversations (`D`).
+- `mattermost_get_unread_group_messages` returns messages from group conversations (`G`) and public/private channels (`O`/`P`).
+- Both use the account represented by `MATTERMOST_TOKEN`, exclude its own posts, and do not mark anything as read.
+- Optional inputs: `limit` (default 50, max 200) and `page` (starting from 0).
+- Results include the sender, channel, timestamp, `total_count`, and `has_more` for pagination.
 
 ### Message Tools
 

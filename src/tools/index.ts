@@ -27,11 +27,19 @@ import {
   setTopicMonitorInstance
 } from "./monitoring.js";
 import { MattermostClient } from "../client.js";
+import {
+  getUnreadDirectMessagesTool,
+  getUnreadGroupMessagesTool,
+  handleGetUnreadDirectMessages,
+  handleGetUnreadGroupMessages,
+} from './unread.js';
 
 // Export all tool definitions
 export const tools: Tool[] = [
   listChannelsTool,
   getChannelHistoryTool,
+  getUnreadDirectMessagesTool,
+  getUnreadGroupMessagesTool,
   postMessageTool,
   replyToThreadTool,
   addReactionTool,
@@ -48,6 +56,8 @@ export { setTopicMonitorInstance };
 export const toolHandlers: Record<string, Function> = {
   mattermost_list_channels: handleListChannels,
   mattermost_get_channel_history: handleGetChannelHistory,
+  mattermost_get_unread_direct_messages: handleGetUnreadDirectMessages,
+  mattermost_get_unread_group_messages: handleGetUnreadGroupMessages,
   mattermost_post_message: handlePostMessage,
   mattermost_reply_to_thread: handleReplyToThread,
   mattermost_add_reaction: handleAddReaction,
