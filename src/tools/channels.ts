@@ -134,6 +134,8 @@ export async function handleGetChannelHistory(
         id: post.id,
         user_id: post.user_id,
         message: post.message,
+        type: post.type || '',
+        props: post.props || {},
         create_at: new Date(post.create_at).toISOString(),
         reply_count: post.reply_count,
         root_id: post.root_id || null,

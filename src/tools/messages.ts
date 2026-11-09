@@ -230,6 +230,8 @@ export async function handleGetThreadReplies(
         id: post.id,
         user_id: post.user_id,
         message: post.message,
+        type: post.type || '',
+        props: post.props || {},
         create_at: new Date(post.create_at).toISOString(),
         root_id: post.root_id || null,
       };
